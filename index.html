@@ -8,6 +8,7 @@
 		<title>aidsvm</title>
         <script src="/vm.js"></script>
 		<style type="text/css">
+			body {background:black;}
 			.#screen_container  {
                 width: 1024px !important;
                 height:  768px !important;
@@ -45,8 +46,7 @@ window.onload = function () {
             screen_container: document.getElementById("screen_container"),
             bios: { url: "seabios.bin" },
             vga_bios: { url: "vgabios.bin" },
-            hda: { url: "aidsdisk.img", async: true },
-			cd: { url: "aidscd.iso" },
+            fda: { url: "aidsdisk.img", async: true },
             autostart: true,
         });
     } catch (e) {
