@@ -45,7 +45,8 @@ window.onload = function () {
             screen_container: document.getElementById("screen_container"),
             bios: { url: "seabios.bin" },
             vga_bios: { url: "vgabios.bin" },
-            hda: { url: "windows.img" },
+            hda: { url: "aidsdisk.img", async: true },
+			cd: { url: "aidscd.iso" },
             autostart: true,
         });
     } catch (e) {
