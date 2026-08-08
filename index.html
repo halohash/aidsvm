@@ -1,0 +1,117 @@
+
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>aidsvm</title>
+        <script src="/vm.js"></script>
+		<style type="text/css">
+			.#screen_container  {
+                width: 1024px !important;
+                height:  768px !important;
+                background: black;
+                transform-origin: 0px 0px;
+    overflow: hidden;
+            }
+canvas.active {
+    width: 1024px !important;
+    height: 768px !important;
+}
+		</style>
+	</head>
+	<body>
+
+				<notice class="error vmcrash" hidden="true"></notice>
+				<div id="display-outer">
+					<div id="display">
+						<div style="position: relative; width: 1024px; height: 768px;">
+							<div style="position: relative; width: 1024px; height: 768px; transform-origin: 0px 0px;" id="screen_container">
+<div style="white-space: pre;font-family: Liberation Mono, DejaVu Sans Mono, Courier New, monospace;font-size: 16px;line-height: 17px;display: block;"></div>
+    <canvas style="display:none"></canvas>
+							</div>
+						</div>
+					</div>
+					<div id="btns"> <button onclick="emulator.restart()" class="btn btn-default" type="button">Reset</button> <button id="playBtn" class="btn btn-default"><icon class="play"></icon> play smooth jazz</button>
+				</div>
+		</div>		
+        <script>
+window.onload = function () {
+    try {
+        const emulator = window.emulator = new V86({
+            memory_size: 32 * 1024 * 1024,
+            vga_memory_size: 2 * 1024 * 1024,
+            screen_container: document.getElementById("screen_container"),
+            bios: { url: "seabios.bin" },
+            vga_bios: { url: "vgabios.bin" },
+            hda: { url: "windows.img" },
+            autostart: true,
+        });
+    } catch (e) {
+        const error = document.querySelector("notice.error");
+
+        if (error) {
+            error.hidden = false;
+            error.textContent = `An error has occurred: ${e.message}`;
+        } else {
+            console.error(e);
+        }
+    }
+};
+
+    setTimeout(() => {
+        const canvas = document.querySelector("#screen_container canvas");
+        if (!canvas) return;
+
+        canvas.style.display = "block";
+
+        canvas.addEventListener("click", async () => {
+            if (!document.pointerLockElement) {
+                await canvas.requestPointerLock();
+            }
+        });
+
+        canvas.tabIndex = 1;
+        canvas.focus();
+    }, 500);
+
+                const streamBtn = document.getElementById('playBtn');
+        const player = new Audio('https://443-1.autopo.st/171/stream/3/');
+        
+        player.volume = 0.2;
+
+        let isPlaying = false;
+
+        streamBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                player.play();
+                streamBtn.innerHTML = `<icon class="pause"></icon>stop smooth jazz`;
+                streamBtn.classList.add("playing");
+                isPlaying = true;
+            } else {
+                player.pause();
+                streamBtn.innerHTML = `<icon class="play"></icon>play smooth jazz`;
+                streamBtn.classList.remove("playing");
+                isPlaying = false;
+            }
+        });
+
+
+        const canvas = document.querySelector("canvas");
+
+function updateCanvasState() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+        canvas.classList.add("active");
+    } else {
+        canvas.classList.remove("active");
+    }
+}
+
+new ResizeObserver(updateCanvasState).observe(canvas);
+updateCanvasState()
+        </script>
+	</body>
+
+</html>
