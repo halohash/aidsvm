@@ -1,4 +1,4 @@
-const Client = new OWOTjs.Client({
+const bot = new OWOTjs.Client({
     world: "aidsvm",
     log: true
 });
@@ -34,16 +34,16 @@ const KEY_MAP = {
     x: "KeyX",
     y: "KeyY",
     z: "KeyZ",
-    "0": "Digit0",
-    "1": "Digit1",
-    "2": "Digit2",
-    "3": "Digit3",
-    "4": "Digit4",
-    "5": "Digit5",
-    "6": "Digit6",
-    "7": "Digit7",
-    "8": "Digit8",
-    "9": "Digit9",
+    0: "Digit0",
+    1: "Digit1",
+    2: "Digit2",
+    3: "Digit3",
+    4: "Digit4",
+    5: "Digit5",
+    6: "Digit6",
+    7: "Digit7",
+    8: "Digit8",
+    9: "Digit9",
     enter: "Enter",
     space: "Space",
     backspace: "Backspace",
@@ -80,71 +80,102 @@ function getCanvas() {
     return document.querySelector("#screen_container canvas");
 }
 
+function getKeyName(code, original) {
+    if (original.length === 1) {
+        return original;
+    }
+
+    const names = {
+        Enter: "Enter",
+        Space: " ",
+        Backspace: "Backspace",
+        Tab: "Tab",
+        Escape: "Escape",
+        ShiftLeft: "Shift",
+        ControlLeft: "Control",
+        AltLeft: "Alt",
+        ArrowUp: "ArrowUp",
+        ArrowDown: "ArrowDown",
+        ArrowLeft: "ArrowLeft",
+        ArrowRight: "ArrowRight"
+    };
+
+    return names[code] || original;
+}
+
 function pressKey(key) {
     const canvas = getCanvas();
-    if (!canvas) return;
 
-    const normalized = key.toLowerCase();
-    const code = KEY_MAP[normalized] || key;
+    if (!canvas) {
+        console.log("Emulator canvas not found");
+        return;
+    }
 
-    const keyName = normalized.length === 1
-        ? normalized
-        : ({
-            Enter: "Enter",
-            Space: " ",
-            Backspace: "Backspace",
-            Tab: "Tab",
-            Escape: "Escape",
-            ArrowUp: "ArrowUp",
-            ArrowDown: "ArrowDown",
-            ArrowLeft: "ArrowLeft",
-            ArrowRight: "ArrowRight"
-        }[code] || key);
+    const original = key.toLowerCase();
+    const code = KEY_MAP[original] || key;
+    const keyName = getKeyName(code, original);
 
-    const down = new KeyboardEvent("keydown", {
+    canvas.focus();
+
+    const keydown = new KeyboardEvent("keydown", {
         key: keyName,
         code: code,
         bubbles: true,
         cancelable: true
     });
 
-    const up = new KeyboardEvent("keyup", {
+    const keyup = new KeyboardEvent("keyup", {
         key: keyName,
         code: code,
         bubbles: true,
         cancelable: true
     });
 
-    canvas.dispatchEvent(down);
+    canvas.dispatchEvent(keydown);
 
     setTimeout(() => {
-        canvas.dispatchEvent(up);
+        canvas.dispatchEvent(keyup);
     }, 50);
 }
 
-function pressKeyRepeated(key, amount) {
+function pressKeys(keys) {
+    let delay = 0;
+
+    for (const key of keys) {
+        setTimeout(() => {
+            pressKey(key);
+        }, delay);
+
+        delay += 75;
+    }
+}
+
+function repeatKey(key, amount) {
+    amount = Math.min(Math.max(amount, 1), 100);
+
     let count = 0;
 
     const interval = setInterval(() => {
         pressKey(key);
+
         count++;
 
         if (count >= amount) {
             clearInterval(interval);
         }
-    }, 75);
+    }, 100);
 }
 
-Client.on("open", () => {
+bot.on("open", () => {
     console.log("OWOT bot connected");
 });
 
-Client.on("join", () => {
-    Client.nickname = "AIDSVMBot";
+bot.on("join", () => {
+    bot.nickname = "AIDSVMBot";
     console.log("AIDSVMBot joined");
 });
 
-Client.on("chat", data => {
+bot.on("chat", data => {
     const username =
         data.username ||
         data.nickname ||
@@ -156,38 +187,48 @@ Client.on("chat", data => {
         data.text ||
         "";
 
-    if (!WHITELIST.includes(username)) return;
+    if (!WHITELIST.includes(username)) {
+        return;
+    }
 
     const args = message.trim().split(/\s+/);
+
+    if (!args.length) {
+        return;
+    }
+
     const command = args.shift().toLowerCase();
 
     if (command === "!key") {
-        if (!args[0]) return;
+        if (!args[0]) {
+            return;
+        }
 
         pressKey(args[0]);
         return;
     }
 
     if (command === "!keys") {
-        if (!args.length) return;
-
-        for (const key of args) {
-            pressKey(key);
+        if (!args.length) {
+            return;
         }
 
+        pressKeys(args);
         return;
     }
 
     if (command === "!repeat") {
-        if (!args[0]) return;
+        if (!args[0]) {
+            return;
+        }
 
-        const key = args[0];
-        const amount = Math.min(
-            Math.max(parseInt(args[1] || "1", 10), 1),
-            100
-        );
+        const amount = parseInt(args[1] || "1", 10);
 
-        pressKeyRepeated(key, amount);
+        if (Number.isNaN(amount)) {
+            return;
+        }
+
+        repeatKey(args[0], amount);
         return;
     }
 });
@@ -206,35 +247,42 @@ async function updateScreen() {
 
         const screentext = emulator.screen_adapter.get_text_screen();
 
-        if (typeof screentext !== "string") return;
+        if (typeof screentext !== "string") {
+            return;
+        }
 
-        if (screentext === lastScreen) return;
+        if (screentext === lastScreen) {
+            return;
+        }
 
         lastScreen = screentext;
 
-        const newlinescreen = screentext;
-
-        await Client.world.writeString(
+        await bot.world.writeString(
             screentext,
             "#000000",
             null,
             -1,
             -1,
             0,
-            newlinescreen
+            0
         );
     } catch (e) {
-        console.error("Screen update error:", e);
+        console.error("Screen mirror error:", e);
     }
 }
 
 setInterval(updateScreen, 500);
 
 setTimeout(() => {
-    const canvas = document.querySelector("#screen_container canvas");
-    if (!canvas) return;
+    const canvas = getCanvas();
+
+    if (!canvas) {
+        console.log("Emulator canvas not found");
+        return;
+    }
 
     canvas.style.display = "block";
+    canvas.tabIndex = 1;
 
     canvas.addEventListener("click", async () => {
         if (!document.pointerLockElement) {
@@ -244,8 +292,9 @@ setTimeout(() => {
                 console.error(e);
             }
         }
+
+        canvas.focus();
     });
 
-    canvas.tabIndex = 1;
     canvas.focus();
 }, 500);
