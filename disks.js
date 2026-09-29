@@ -58,7 +58,7 @@ async function getstatebyte(index) {
 
 async function downloadStateFile() {
     try {
-const buffer = await stateSave();
+const buffer = await statesave();
 
 const blob = new Blob([buffer], { type: 'application/octet-stream' });
 
