@@ -50,3 +50,17 @@ async function changestatebyte(index, newValue) {
     throw error;
   }
 }
+
+async function getstatebyte(index, newValue) {
+  try {
+    const stateBuffer = await emulator.save_state();
+    
+    const byteArray = new Uint8Array(stateBuffer);
+
+    
+    return byteArray[index]
+  } catch (error) {
+    console.error("Failed to get state byte:", error);
+    throw error;
+  }
+}
