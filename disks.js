@@ -59,7 +59,7 @@ async function getstatebyte(index) {
 async function downloadStateFile() {
     try {
         // 1. Await the state data
-        const stateData = await stateSave();
+        const stateData = await statesave();
 
         // 2. Convert to string if it is an object/array
         const dataString = typeof stateData === 'string' ? stateData : JSON.stringify(stateData);
