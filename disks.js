@@ -34,3 +34,19 @@ async function getstate(statebuffer) {
         throw error;
     }
 }
+
+
+async function changestatebyte(index, newValue) {
+  try {
+    const stateBuffer = await emulator.save_state();
+    
+    const byteArray = new Uint8Array(stateBuffer);
+    
+    byteArray[index] = newValue; 
+    
+    getstate(stateBuffer);
+  } catch (error) {
+    console.error("Failed to change state byte:", error);
+    throw error;
+  }
+}
