@@ -21,6 +21,89 @@ canvas.active {
     height: 360px !important;
 }
 		</style>
+<script>
+const jsonData = [
+    {
+        name: "vm1",
+        url: "/itsjustdos.img",
+        type: "fda"
+    },
+    {
+        name: "vm2",
+        url: "/windows31.img",
+        type: "hda"
+    },
+    {
+        name: "vm3",
+        url: "/third.img",
+        type: "fda"
+    }
+];
+
+function getVMFromHash() {
+    const hashKey = window.location.hash.substring(1);
+
+    return jsonData.find(vm => vm.name === hashKey);
+}
+
+const vm = getVMFromHash();
+
+const emulatorConfig = {
+    wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
+
+    memory_size: 32 * 1024 * 1024,
+    vga_memory_size: 2 * 1024 * 1024,
+
+    screen_container: document.getElementById("screen_container"),
+
+    bios: {
+        url: "seabios.bin"
+    },
+
+    vga_bios: {
+        url: "vgabios.bin"
+    },
+
+    autostart: true
+};
+
+// Add the selected disk
+if (vm) {
+    if (vm.type === "fda") {
+        emulatorConfig.fda = {
+            url: vm.url,
+            async: true
+        };
+    }
+
+    if (vm.type === "hda") {
+        emulatorConfig.hda = {
+            url: vm.url,
+            async: true
+        };
+    }
+}
+
+function getV86StringFromHash(defaultString = "default_boot.img") {
+    const hashKey = window.location.hash.substring(1);
+
+    if (!hashKey) {
+        return defaultString;
+    }
+
+    const vm = jsonData.find(item => item.name === hashKey);
+
+    if (vm) {
+        return vm.url;
+    }
+
+    return defaultString;
+}
+
+
+
+
+</script>
 	</head>
 	<body>
 
@@ -39,16 +122,7 @@ canvas.active {
         <script>
 window.onload = function () {
     try {
-        const emulator = window.emulator = new V86({
-            wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
-            memory_size: 32 * 1024 * 1024,
-            vga_memory_size: 2 * 1024 * 1024,
-            screen_container: document.getElementById("screen_container"),
-            bios: { url: "seabios.bin" },
-            vga_bios: { url: "vgabios.bin" },
-            fda: { url: "itsjustdos.img", async: true },
-            autostart: true,
-        });
+        const emulator = window.emulator = new V86(emulatorConfig);
     } catch (e) {
         const error = document.querySelector("notice.error");
 
