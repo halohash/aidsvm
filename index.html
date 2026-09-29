@@ -6,10 +6,10 @@
 	<head>
 		<meta charset="utf-8">
 		<title>aidsvm</title>
-        <script src="/vm.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/v86@0.5.462/build/libv86.min.js"></script>
 		<style type="text/css">
 			body {background:black;}
-			.#screen_container  {
+			#screen_container  {
                 width: 1024px !important;
                 height:  768px !important;
                 background: black;
@@ -40,6 +40,7 @@ canvas.active {
 window.onload = function () {
     try {
         const emulator = window.emulator = new V86({
+            wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
             memory_size: 32 * 1024 * 1024,
             vga_memory_size: 2 * 1024 * 1024,
             screen_container: document.getElementById("screen_container"),
@@ -91,8 +92,6 @@ function updateCanvasState() {
 new ResizeObserver(updateCanvasState).observe(canvas);
 updateCanvasState()
         </script>
-<script src="https://cdn.jsdelivr.net/npm/owot-js@1.2.4/index.min.js" defer></script>
-<script src="/owotbot.js" defer></script>
 	</body>
 
 </html>
