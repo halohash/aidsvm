@@ -12,8 +12,8 @@ bot.on("chat", data => {
 });
 bot.player.quota.infinite = true
 function wender() {
-    emulator.screen_adapter.get_text_screen().forEach((name, index) => {
-    bot.world.writeString(name, -1, -1, 0, 0, 0, index);
-});
+    emulator.screen_adapter.get_text_screen().forEach((line, index) => {
+        bot.world.writeString(line, -1, -1, 0, 0, 0, index);
+    });
 }
-window.addEventListener("load",()=>{setInterval(wender,1000)})
+window.addEventListener("load",()=>{setInterval(wender,10000)})
