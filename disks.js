@@ -58,26 +58,20 @@ async function getstatebyte(index) {
 
 async function downloadStateFile() {
     try {
-        // 1. Await the state data
-        const stateData = await statesave();
+const buffer = await stateSave();
 
-        // 2. Convert to string if it is an object/array
-        const dataString = typeof stateData === 'string' ? stateData : JSON.stringify(stateData);
+const blob = new Blob([buffer], { type: 'application/octet-stream' });
 
-        // 3. Create a binary Blob
-        const blob = new Blob([dataString], { type: 'application/octet-stream' });
+const url = URL.createObjectURL(blob);
 
-        // 4. Create a temporary download link
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'state.bin'; // The name of your file
+const a = document.createElement('a');
+a.href = url;
+a.download = 'state.bin';
+document.body.appendChild(a);
+a.click();
 
-        // 5. Trigger the download and clean up
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Failed to download state:', error);
     }
