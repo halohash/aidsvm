@@ -1,171 +1,49 @@
-
-
 <!DOCTYPE html>
-<html>
-
-	<head>
-		<meta charset="utf-8">
-		<title>aidsvm</title>
-        <script src="https://cdn.jsdelivr.net/npm/v86@0.5.462/build/libv86.min.js"></script>
-		<style type="text/css">
-			body {background:black;}
-			#screen_container  {
-                width: 1024px !important;
-                height:  768px !important;
-                background: black;
-                transform-origin: 0px 0px;
+<html><link href="//fonts.googleapis.com/css?family=Droid+Sans+TV:regular,bold" rel="stylesheet" type="text/css">
+<style>
+a.vm {
+    font-family: 'Droid Sans TV',Arial,Helvetica,sans-serif;
+    font-size: 100%;
+    background: transparent;
+    -webkit-box-sizing: border-box;
+    border: 1px solid #000;
+    padding: 1px;
+    margin: 10px;
+    background-color: #262626;
+    border-top: 1px solid #1e1e1e;
+    box-shadow: inset -1px 1px #343434,inset 1px -1px #1e1e1e;
+    line-height: 1;
+    text-align: start;
+    font-family: 'Droid Sans TV',Arial,Helvetica,sans-serif;
+    color: #ebeaea;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    -webkit-box-sizing: border-box;
+    font-size: 1.5em;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    text-shadow: 1px 1px rgba(0,0,0,0.7);
+    white-space: nowrap;
     overflow: hidden;
-            }
-canvas.active {
-    width: 480px !important;
-    height: 360px !important;
+    padding-right: 0.1em;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 10px;
 }
-		</style>
-<script>
-const jsonData = [
-    {
-        name: "vm1",
-        url: "/itsjustdos.img",
-        type: "fda"
-    },
-    {
-        name: "vm2",
-        url: "/windows31.img",
-        type: "hda"
-    },
-    {
-        name: "vm3",
-        url: "/third.img",
-        type: "fda"
-    }
-];
-
-function getVMFromHash() {
-    const hashKey = window.location.hash.substring(1);
-
-    return jsonData.find(vm => vm.name === hashKey);
+  
+html {
+  padding:0px !important;
 }
-
-const vm = getVMFromHash();
-
-const emulatorConfig = {
-    wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
-
-    memory_size: 32 * 1024 * 1024,
-    vga_memory_size: 2 * 1024 * 1024,
-
-    screen_container: document.getElementById("screen_container"),
-
-    bios: {
-        url: "seabios.bin"
-    },
-
-    vga_bios: {
-        url: "vgabios.bin"
-    },
-
-    autostart: true
-};
-
-// Add the selected disk
-if (vm) {
-    if (vm.type === "fda") {
-        emulatorConfig.fda = {
-            url: vm.url,
-            async: true
-        };
-    }
-
-    if (vm.type === "hda") {
-        emulatorConfig.hda = {
-            url: vm.url,
-            async: true
-        };
-    }
+  
+body {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAFeCAYAAABEunUfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAl2cEFnAAAAAQAAAV4A+3R0QQAAAKxJREFUOMutlLESwyAMQy3W9vr/X1tlaJOjsWUMdGHA5kkYHfZ4vtiMb2tm1i+Aub1wAdIWpFCMJT0edwe3QmAIqtCJL1WhNPoCSpPUGlAzmCmUyVM2xkLbPADWSP7LgTtRCOHZBxWk1fiszW9n7Nv4HbIB34hGD1olfx4AwVcw7UXjTeEDXXbZuBb+NFMFrjN54aUhd63av5vMxe+ReWLPlhgldTl2yrrx9PoHTg8Vbg4vX8AAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAAElFTkSuQmCC);
+    background-position: left bottom;
+    background-repeat: repeat-x;
+    background-color: #0b0c0d;
+    position: absolute;
+    width: 100%;
+    height: 100%;
 }
-
-function getV86StringFromHash(defaultString = "default_boot.img") {
-    const hashKey = window.location.hash.substring(1);
-
-    if (!hashKey) {
-        return defaultString;
-    }
-
-    const vm = jsonData.find(item => item.name === hashKey);
-
-    if (vm) {
-        return vm.url;
-    }
-
-    return defaultString;
-}
-
-
-
-
-</script>
-	</head>
-	<body>
-
-				
-				<div id="display-outer">
-					<div id="display">
-						<div style="position: relative; width: 1024px; height: 768px;">
-							<div style="position: relative; width: 1024px; height: 768px; transform-origin: 0px 0px;" id="screen_container">
-<div style="white-space: pre;font-family: Liberation Mono, DejaVu Sans Mono, Courier New, monospace;font-size: 16px;line-height: 17px;display: block;"></div>
-    <canvas style="display:none"></canvas>
-							</div>
-						</div>
-					</div>
-				</div>
-		</div>		
-        <script>
-window.onload = function () {
-    try {
-        const emulator = window.emulator = new V86(emulatorConfig);
-    } catch (e) {
-        const error = document.querySelector("notice.error");
-
-        if (error) {
-            error.hidden = false;
-            error.textContent = `An error has occurred: ${e.message}`;
-        } else {
-            console.error(e);
-        }
-    }
-};
-
-    setTimeout(() => {
-        const canvas = document.querySelector("#screen_container canvas");
-        if (!canvas) return;
-
-        canvas.style.display = "block";
-
-        canvas.addEventListener("click", async () => {
-            if (!document.pointerLockElement) {
-                await canvas.requestPointerLock();
-            }
-        });
-
-        canvas.tabIndex = 1;
-        canvas.focus();
-    }, 500);
-
-        
-        const canvas = document.querySelector("canvas");
-
-function updateCanvasState() {
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-        canvas.classList.add("active");
-    } else {
-        canvas.classList.remove("active");
-    }
-}
-
-new ResizeObserver(updateCanvasState).observe(canvas);
-updateCanvasState()
-        </script>
-	</body>
-<script src="/disks.js" defer></script> <!-- floppyload(url) or cdload(url) or statesave() or getstate(arraybuffer) -->
-</html>
+</style>
+  <body><a class="vm" href="/vm#vm1">VM 1</a><a class="vm" href="/vm#vm2">VM 2</a></body></html>

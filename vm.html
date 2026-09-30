@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>aidsvm">
+
+    <script src="https://cdn.jsdelivr.net/npm/v86@0.5.462/build/libv86.min.js"></script>
+
+    <style type="text/css">
+        body {
+            background: black;
+        }
+
+        #screen_container {
+            width: 1024px !important;
+            height: 768px !important;
+            background: black;
+            transform-origin: 0px 0px;
+            overflow: hidden;
+        }
+
+        canvas.active {
+            width: 480px !important;
+            height: 360px !important;
+        }
+    </style>
+
+    <script>
+        const jsonData = [
+            {
+                name: "vm1",
+                url: "/itsjustdos.img",
+                type: "fda"
+            },
+            {
+                name: "vm2",
+                url: "/windows31_hda.img",
+                type: "hda"
+            },
+            {
+                name: "vm3",
+                url: "/third.img",
+                type: "cdrom"
+            }
+        ];
+
+        function getVMFromHash() {
+            const hashKey = window.location.hash.substring(1);
+
+            return jsonData.find(vm => vm.name === hashKey);
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="display-outer">
+        <div id="display">
+            <div style="position: relative; width: 1024px; height: 768px;">
+                <div
+                    style="position: relative; width: 1024px; height: 768px; transform-origin: 0px 0px;"
+                    id="screen_container"
+                >
+                    <div style="
+                        white-space: pre;
+                        font-family: Liberation Mono, DejaVu Sans Mono, Courier New, monospace;
+                        font-size: 16px;
+                        line-height: 17px;
+                        display: block;
+                    "></div>
+
+                    <canvas style="display:none"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            try {
+                const vm = getVMFromHash();
+
+                // Default to vm1 if no valid hash was supplied
+                const selectedVM = vm || jsonData[0];
+
+                const emulatorConfig = {
+                    wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
+
+                    memory_size: 128 * 1024 * 1024,
+                    vga_memory_size: 2 * 1024 * 1024,
+
+                    screen_container: document.getElementById("screen_container"),
+
+                    bios: {
+                        url: "seabios.bin"
+                    },
+
+                    vga_bios: {
+                        url: "vgabios.bin"
+                    },
+
+                    autostart: true
+                };
+
+                // Dynamically add fda or hda
+                emulatorConfig[selectedVM.type] = {
+                    url: selectedVM.url,
+                    async: true
+                };
+
+                console.log("Selected VM:", selectedVM.name);
+                console.log("Disk:", selectedVM.url);
+                console.log("Type:", selectedVM.type);
+
+                const emulator = window.emulator = new V86(emulatorConfig);
+
+                // Wait for V86 to create/use its canvas
+                setTimeout(() => {
+                    const canvas = document.querySelector("#screen_container canvas");
+
+                    if (!canvas) {
+                        console.error("V86 canvas was not found.");
+                        return;
+                    }
+
+                    canvas.style.display = "block";
+
+                    canvas.addEventListener("click", async () => {
+                        if (!document.pointerLockElement) {
+                            try {
+                                await canvas.requestPointerLock();
+                            } catch (e) {
+                                console.error("Pointer lock failed:", e);
+                            }
+                        }
+                    });
+
+                    canvas.tabIndex = 1;
+                    canvas.focus();
+
+                    function updateCanvasState() {
+                        const rect = canvas.getBoundingClientRect();
+
+                        if (rect.width > 0 && rect.height > 0) {
+                            canvas.classList.add("active");
+                        } else {
+                            canvas.classList.remove("active");
+                        }
+                    }
+
+                    new ResizeObserver(updateCanvasState).observe(canvas);
+
+                    updateCanvasState();
+
+                }, 500);
+
+            } catch (e) {
+                const error = document.querySelector("notice.error");
+
+                if (error) {
+                    error.hidden = false;
+                    error.textContent = `An error has occurred: ${e.message}`;
+                } else {
+                    console.error(e);
+                }
+            }
+        };
+    </script>
+
+    <script src="/disks.js" defer></script>
+
+</body>
+</html>
